@@ -1,0 +1,214 @@
+<section class="mt-10" x-data="userModal()">
+  <h3 class="text-xl font-semibold mb-4">Kelola Users</h3>
+
+  <!-- Tambah User -->
+  <form action="/users" method="POST" class="space-y-2 mb-6">
+    <div class="flex gap-2">
+      <input
+        type="text"
+        name="username"
+        placeholder="Username"
+        required
+        class="border px-3 py-2 rounded-md w-1/2"
+      />
+      <input
+        type="email"
+        name="email"
+        placeholder="Email"
+        required
+        class="border px-3 py-2 rounded-md w-1/2"
+      />
+      <input
+        type="password"
+        name="password"
+        placeholder="Password"
+        required
+        class="border px-3 py-2 rounded-md w-1/2"
+      />
+    </div>
+    <button
+      type="submit"
+      class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+    >
+      Tambah User
+    </button>
+  </form>
+
+  <!-- Tabel Users -->
+  <table class="w-full border-collapse">
+    <thead>
+      <tr class="bg-gray-200">
+        <th class="border px-4 py-2">#</th>
+        <th class="border px-4 py-2">Username</th>
+        <th class="border px-4 py-2">Email</th>
+        <th class="border px-4 py-2">Role</th>
+        <th class="border px-4 py-2">Aksi</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% users.forEach((u, index) => { %>
+      <tr>
+        <td class="border px-4 py-2"><%= index + 1 %></td>
+        <td class="border px-4 py-2"><%= u.username %></td>
+        <td class="border px-4 py-2"><%= u.email %></td>
+        <td class="border px-4 py-2"><%= u.role %></td>
+        <td class="border px-4 py-2 flex gap-2 justify-center">
+          <!-- Tombol Edit -->
+          <button
+            @click="openEditModal('<%= u.id %>', '<%= u.username %>', '<%= u.email %>', '<%= u.role %>', '<%= u.password %>')"
+            class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+          >
+            Edit
+          </button>
+
+          <!-- Tombol Hapus -->
+          <button
+            @click="openDeleteModal('<%= u.id %>')"
+            class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+          >
+            Hapus
+          </button>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <!-- Modal Edit -->
+  <div
+    x-show="showEdit"
+    x-cloak
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white p-6 rounded-md w-96 shadow-md">
+      <h2 class="text-lg font-semibold mb-4">Edit User</h2>
+      <form x-bind:action="`/users/${userId}?_method=PUT`" method="POST">
+        <div class="mb-3">
+          <input
+            type="text"
+            name="username"
+            x-model="username"
+            required
+            class="w-full border px-3 py-2 rounded-md"
+          />
+        </div>
+        <div class="mb-3">
+          <input
+            type="email"
+            name="email"
+            x-model="email"
+            required
+            class="w-full border px-3 py-2 rounded-md"
+          />
+        </div>
+        <select
+          name="role"
+          x-model="role"
+          required
+          class="w-full border px-3 py-2 rounded-md"
+        >
+          <option value="">Pilih Role</option>
+          <option value="admin">Admin</option>
+          <option value="staff">Staff</option>
+          <option value="seller">Seller</option>
+          <option value="customer">Customer</option>
+        </select>
+
+        <div class="mb-3">
+          <input
+            type="password"
+            name="password"
+            x-model="password"
+            required
+            class="w-full border px-3 py-2 rounded-md"
+          />
+        </div>
+        <div class="flex justify-end gap-2">
+          <button
+            type="button"
+            @click="closeModals"
+            class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Update
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Delete -->
+  <div
+    x-show="showDelete"
+    x-cloak
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white p-6 rounded-md w-96 shadow-md">
+      <h2 class="text-lg font-semibold mb-4 text-center">
+        Yakin ingin menghapus user ini?
+      </h2>
+      <form
+        x-bind:action="`/users/${userId}?_method=DELETE`"
+        method="POST"
+        class="flex justify-center gap-4"
+      >
+        <button
+          type="button"
+          @click="closeModals"
+          class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          Yes
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+  function userModal() {
+    return {
+      showEdit: false,
+      showDelete: false,
+      userId: "",
+      username: "",
+      email: "",
+      password: "",
+      role: "",
+
+      openEditModal(id, username, email, role, password) {
+        this.userId = id;
+        this.username = username;
+        this.email = email;
+        this.role = role;
+        this.password = password;
+        this.showEdit = true;
+      },
+
+      openDeleteModal(id) {
+        this.userId = id;
+        this.showDelete = true;
+      },
+
+      closeModals() {
+        this.showEdit = false;
+        this.showDelete = false;
+        this.userId = "";
+        this.username = "";
+        this.email = "";
+        this.password = "";
+        this.role = "";
+      },
+    };
+  }
+</script>

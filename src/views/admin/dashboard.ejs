@@ -1,0 +1,108 @@
+<section>
+  <h2 class="text-2xl font-bold mb-4">Dashboard Admin</h2>
+  <div class="grid md:grid-cols-3 gap-4 mb-6">
+    <% if (['admin', 'staff'].includes(user.role)) { %>
+    <div class="bg-blue-100 p-4 rounded-md text-center">
+      <p class="text-3xl font-bold text-blue-600"><%= users.length %></p>
+      <p>Users</p>
+    </div>
+    <% } %> <% if (['admin', 'staff', 'seller'].includes(user.role)) { %>
+    <div class="bg-green-100 p-4 rounded-md text-center">
+      <p class="text-3xl font-bold text-green-600"><%= products.length %></p>
+      <p>Products</p>
+    </div>
+    <% } %> <% if (['admin', 'staff', 'customer'].includes(user.role)) { %>
+    <div class="bg-yellow-100 p-4 rounded-md text-center">
+      <p class="text-3xl font-bold text-yellow-600"><%= orders.length %></p>
+      <p>Orders</p>
+    </div>
+    <% } %>
+  </div>
+
+  <!-- Tab Buttons -->
+  <div class="flex space-x-4 mb-4">
+    <% if (['admin', 'staff'].includes(user.role)) { %>
+    <button
+      class="tab-btn px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 active-tab"
+      data-tab="user"
+    >
+      User
+    </button>
+    <% } %> <% if (['admin', 'seller'].includes(user.role)) { %>
+    <button
+      class="tab-btn px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+      data-tab="product"
+    >
+      Product
+    </button>
+    <% } %> <% if (['admin', 'customer'].includes(user.role)) { %>
+    <button
+      class="tab-btn px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
+      data-tab="order"
+    >
+      Order
+    </button>
+    <% } %>
+  </div>
+
+  <!-- Flash message -->
+  <% if (typeof message !== 'undefined' && message) { %>
+  <div
+    x-data="{ show: true }"
+    x-show="show"
+    x-init="setTimeout(() => show = false, 4000)"
+    class="mb-4 px-4 py-3 rounded text-white <%= message.type === 'success' ? 'bg-green-500' : 'bg-red-500' %>"
+  >
+    <%= message.text %>
+  </div>
+  <% } %>
+
+  <!-- Tab Content -->
+  <% if (['admin', 'staff'].includes(user.role)) { %>
+  <div
+    id="tab-content-user"
+    class="tab-content <%= defaultTab !== 'user' ? 'hidden' : '' %>"
+  >
+    <%- include('partials/user') %>
+  </div>
+  <% } %> <% if (['admin', 'staff', 'seller', 'customer'].includes(user.role)) {
+  %>
+  <div
+    id="tab-content-product"
+    class="tab-content <%= defaultTab !== 'product' ? 'hidden' : '' %>"
+  >
+    <%- include('partials/product') %>
+  </div>
+  <% } %> <% if (['admin', 'staff', 'customer'].includes(user.role)) { %>
+  <div
+    id="tab-content-order"
+    class="tab-content <%= defaultTab !== 'order' ? 'hidden' : '' %>"
+  >
+    <%- include('partials/order') %>
+  </div>
+  <% } %>
+</section>
+
+<!-- JavaScript Tab Switcher (same as before) -->
+<script>
+  const tabButtons = document.querySelectorAll(".tab-btn");
+  const tabContents = document.querySelectorAll(".tab-content");
+
+  tabButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      const target = button.getAttribute("data-tab");
+
+      tabContents.forEach((content) => content.classList.add("hidden"));
+      tabButtons.forEach((btn) =>
+        btn.classList.remove("active-tab", "bg-gray-300")
+      );
+
+      const contentToShow = document.getElementById(`tab-content-${target}`);
+      if (contentToShow) {
+        contentToShow.classList.remove("hidden");
+      }
+
+      button.classList.add("active-tab", "bg-gray-300");
+    });
+  });
+</script>

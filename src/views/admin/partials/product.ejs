@@ -1,0 +1,267 @@
+<section class="mt-10" x-data="productModal()">
+  <h3 class="text-xl font-semibold mb-4">Kelola Produk</h3>
+
+  <!-- Tambah Produk -->
+  <form action="/products" method="POST" class="space-y-4 mb-6">
+    <div class="flex flex-col md:flex-row gap-4">
+      <input
+        type="text"
+        name="name"
+        placeholder="Nama Produk"
+        required
+        class="w-full border px-3 py-2 rounded-md"
+      />
+      <input
+        type="number"
+        name="price"
+        placeholder="Harga"
+        required
+        class="w-full border px-3 py-2 rounded-md"
+      />
+      <input
+        type="number"
+        name="stock"
+        placeholder="Stok"
+        required
+        class="w-full border px-3 py-2 rounded-md"
+      />
+    </div>
+
+    <div class="flex flex-col md:flex-row gap-4">
+      <select name="region" required class="w-full border px-3 py-2 rounded-md">
+        <option value="">Pilih Region</option>
+        <option value="global">Global</option>
+        <option value="asia">Asia</option>
+        <option value="europe">Europe</option>
+      </select>
+
+      <% if (['admin', 'staff'].includes(user.role)) { %>
+      <label class="flex items-center space-x-2">
+        <input type="checkbox" name="approved" class="h-4 w-4" />
+        <span>Approved</span>
+      </label>
+      <% } %>
+    </div>
+
+    <button
+      type="submit"
+      class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+    >
+      Tambah Produk
+    </button>
+  </form>
+
+  <!-- Tabel Produk -->
+  <table class="w-full border-collapse mt-6">
+    <thead>
+      <tr class="bg-gray-200">
+        <th class="border px-4 py-2">#</th>
+        <th class="border px-4 py-2">Nama</th>
+        <th class="border px-4 py-2">Harga</th>
+        <th class="border px-4 py-2">Stok</th>
+        <th class="border px-4 py-2">Region</th>
+        <th class="border px-4 py-2">Status</th>
+        <th class="border px-4 py-2">Aksi</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% products.forEach((p, index) => { %>
+      <tr>
+        <td class="border px-4 py-2"><%= index + 1 %></td>
+        <td class="border px-4 py-2"><%= p.name %></td>
+        <td class="border px-4 py-2">Rp <%= p.price %></td>
+        <td class="border px-4 py-2"><%= p.stock %></td>
+        <td class="border px-4 py-2 capitalize"><%= p.region %></td>
+        <td class="border px-4 py-2">
+          <% if (p.approved) { %>
+          <span class="text-green-600 font-medium">Approved</span>
+          <% } else { %>
+          <span class="text-red-500 font-medium">Pending</span>
+          <% } %>
+        </td>
+        <td class="border px-4 py-2 flex gap-2 justify-center">
+          <button
+            @click="openEditModal(
+            '<%= p.id %>',
+            '<%= p.name %>',
+            '<%= p.price %>',
+            '<%= p.stock %>',
+            '<%= p.region %>',
+            <%= p.approved %>
+          )"
+            class="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+          >
+            Edit
+          </button>
+          <button
+            @click="openDeleteModal('<%= p.id %>')"
+            class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+          >
+            Hapus
+          </button>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <!-- Modal Edit Produk -->
+  <div
+    x-show="showEdit"
+    x-cloak
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white p-6 rounded-md w-96 shadow-md">
+      <h2 class="text-lg font-semibold mb-4">Edit Produk</h2>
+      <form x-bind:action="`/products/${productId}?_method=PUT`" method="POST">
+        <div class="mb-3">
+          <input
+            type="text"
+            name="name"
+            x-model="name"
+            required
+            class="w-full border px-3 py-2 rounded-md"
+            placeholder="Nama Produk"
+          />
+        </div>
+
+        <div class="mb-3">
+          <input
+            type="number"
+            name="price"
+            x-model="price"
+            required
+            class="w-full border px-3 py-2 rounded-md"
+            placeholder="Harga"
+          />
+        </div>
+
+        <div class="mb-3">
+          <input
+            type="number"
+            name="stock"
+            x-model="stock"
+            required
+            class="w-full border px-3 py-2 rounded-md"
+            placeholder="Stok"
+          />
+        </div>
+
+        <div class="mb-3">
+          <select
+            name="region"
+            x-model="region"
+            class="w-full border px-3 py-2 rounded-md"
+            required
+          >
+            <option value="">Pilih Region</option>
+            <option value="global">Global</option>
+            <option value="asia">Asia</option>
+            <option value="europe">Europe</option>
+          </select>
+        </div>
+
+        <% if (['admin', 'staff'].includes(user.role)) { %>
+        <div class="mb-3 flex items-center gap-2">
+          <input
+            type="checkbox"
+            name="approved"
+            x-model="approved"
+            class="h-4 w-4"
+          />
+          <label>Approved</label>
+        </div>
+        <% } %>
+
+        <div class="flex justify-end gap-2">
+          <button
+            type="button"
+            @click="closeModals"
+            class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Update
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Hapus Produk -->
+  <div
+    x-show="showDelete"
+    x-cloak
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white p-6 rounded-md w-96 shadow-md">
+      <h2 class="text-lg font-semibold mb-4 text-center">
+        Yakin ingin menghapus produk ini?
+      </h2>
+      <form
+        x-bind:action="`/products/${productId}?_method=DELETE`"
+        method="POST"
+        class="flex justify-center gap-4"
+      >
+        <button
+          type="button"
+          @click="closeModals"
+          class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          Yes
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+  function productModal() {
+    return {
+      showEdit: false,
+      showDelete: false,
+      productId: "",
+      name: "",
+      price: "",
+      stock: "",
+      region: "",
+      approved: false,
+
+      openEditModal(id, name, price, stock, region, approved) {
+        this.productId = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        this.region = region;
+        this.approved = approved;
+        this.showEdit = true;
+      },
+
+      openDeleteModal(id) {
+        this.productId = id;
+        this.showDelete = true;
+      },
+
+      closeModals() {
+        this.showEdit = false;
+        this.showDelete = false;
+        this.productId = "";
+        this.name = "";
+        this.price = "";
+        this.stock = "";
+        this.region = "";
+        this.approved = false;
+      },
+    };
+  }
+</script>

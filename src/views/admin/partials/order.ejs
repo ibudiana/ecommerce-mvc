@@ -1,0 +1,314 @@
+<section
+  class="mt-10"
+  x-data="orderModal()"
+  x-init='products = JSON.parse(`<%= JSON.stringify(publicProducts).replace(/`/g, "\\`") %>`)'
+>
+  <h3 class="text-xl font-semibold mb-4">Kelola Order</h3>
+
+  <div class="text-right mb-4">
+    <button
+      @click="openNewOrderModal"
+      class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+    >
+      + Order Baru
+    </button>
+  </div>
+
+  <!-- Tabel Orders -->
+  <table class="w-full border-collapse mt-6">
+    <thead>
+      <tr class="bg-gray-200">
+        <th class="border px-4 py-2">#</th>
+        <th class="border px-4 py-2">Order ID</th>
+        <th class="border px-4 py-2">User ID</th>
+        <th class="border px-4 py-2">Tanggal</th>
+        <th class="border px-4 py-2">Aksi</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% orders.forEach((o, index) => { %>
+      <tr>
+        <td class="border px-4 py-2"><%= index + 1 %></td>
+        <td class="border px-4 py-2"><%= o.id %></td>
+        <td class="border px-4 py-2"><%= o.user.username %></td>
+        <td class="border px-4 py-2">
+          <%= new Date(o.createdAt).toLocaleString('id-ID') %>
+        </td>
+        <td class="border px-4 py-2 flex gap-2 justify-center">
+          <button
+            @click="openInvoiceModal(<%= JSON.stringify(o) %>)"
+            class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+          >
+            Detail
+          </button>
+        </td>
+      </tr>
+      <% }) %>
+    </tbody>
+  </table>
+
+  <!-- Modal Tambah Order -->
+  <div
+    x-show="showNewOrder"
+    x-cloak
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div
+      class="bg-white p-6 rounded-md w-full max-w-lg shadow-md overflow-y-auto max-h-[90vh]"
+    >
+      <h2 class="text-xl font-semibold mb-4">Tambah Order Baru</h2>
+
+      <form action="/orders" method="POST" class="space-y-4">
+        <input type="hidden" name="userId" :value="<%= user.id %>" />
+
+        <template x-for="(item, index) in newOrderItems" :key="index">
+          <div class="flex items-center gap-2">
+            <select
+              name="orderItems[][productId][]"
+              class="w-full border px-3 py-2 rounded"
+              x-model="item.productId"
+            >
+              <option value="">Pilih Produk</option>
+              <template x-for="product in products" :key="product.id">
+                <option :value="product.id" x-text="product.name"></option>
+              </template>
+            </select>
+            <input
+              type="number"
+              name="orderItems[][quantity][]"
+              class="w-24 border px-2 py-2 rounded"
+              x-model.number="item.quantity"
+              min="1"
+              placeholder="Qty"
+            />
+            <button
+              type="button"
+              class="text-red-500 hover:text-red-700"
+              @click="removeOrderItem(index)"
+            >
+              &times;
+            </button>
+          </div>
+        </template>
+
+        <div>
+          <button
+            type="button"
+            class="text-blue-600 hover:underline text-sm"
+            @click="addOrderItem"
+          >
+            + Tambah Produk
+          </button>
+        </div>
+
+        <div class="flex justify-end gap-4 mt-4">
+          <button
+            type="button"
+            @click="closeModals"
+            class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          >
+            Simpan Order
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Invoice -->
+  <div
+    x-show="showInvoice"
+    x-cloak
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div
+      class="bg-white p-6 rounded-md w-full max-w-xl shadow-md overflow-y-auto max-h-[90vh]"
+    >
+      <h2 class="text-xl font-semibold mb-4">
+        Invoice Order #<span x-text="invoice.id"></span>
+      </h2>
+
+      <div class="mb-4">
+        <p>
+          <strong>Username:</strong>
+          <span x-text="invoice.user?.username"></span>
+        </p>
+        <p>
+          <strong>Email:</strong> <span x-text="invoice.user?.email"></span>
+        </p>
+        <p>
+          <strong>Region:</strong>
+          <span x-text="invoice.user?.attributes?.region"></span>
+        </p>
+        <p>
+          <strong>Tanggal:</strong>
+          <span
+            x-text="new Date(invoice.createdAt).toLocaleString('id-ID')"
+          ></span>
+        </p>
+      </div>
+
+      <table class="w-full border-collapse mb-4">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="border px-3 py-2 text-left">Produk</th>
+            <th class="border px-3 py-2 text-center">Qty</th>
+            <th class="border px-3 py-2 text-right">Harga</th>
+            <th class="border px-3 py-2 text-right">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="(item, idx) in invoice.items" :key="idx">
+            <tr>
+              <td
+                class="border px-3 py-2"
+                x-text="getProductName(item.productId)"
+              ></td>
+              <td
+                class="border px-3 py-2 text-center"
+                x-text="item.quantity"
+              ></td>
+              <td
+                class="border px-3 py-2 text-right"
+                x-text="formatPrice(getProductPrice(item.productId))"
+              ></td>
+              <td
+                class="border px-3 py-2 text-right"
+                x-text="formatPrice(getProductPrice(item.productId) * item.quantity)"
+              ></td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+
+      <div class="text-right font-semibold text-lg">
+        Total: <span x-text="formatPrice(totalAmount())"></span>
+      </div>
+
+      <div class="text-right mt-4">
+        <button
+          type="button"
+          @click="closeModals"
+          class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+        >
+          Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Hapus Order -->
+  <div
+    x-show="showDelete"
+    x-cloak
+    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+  >
+    <div class="bg-white p-6 rounded-md w-96 shadow-md">
+      <h2 class="text-lg font-semibold mb-4 text-center">
+        Yakin ingin menghapus order ini?
+      </h2>
+      <form
+        x-bind:action="`/orders/${orderId}?_method=DELETE`"
+        method="POST"
+        class="flex justify-center gap-4"
+      >
+        <button
+          type="button"
+          @click="closeModals"
+          class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+        >
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        >
+          Yes
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<script>
+  function orderModal() {
+    return {
+      showDelete: false,
+      showInvoice: false,
+      showNewOrder: false,
+      userId: 1,
+      products: [],
+      orderId: "",
+      invoice: {
+        id: null,
+        user: {},
+        items: [],
+        products: [],
+        createdAt: "",
+      },
+
+      newOrderItems: [],
+
+      openNewOrderModal() {
+        this.showNewOrder = true;
+      },
+
+      addOrderItem() {
+        this.newOrderItems.push({ productId: "", quantity: 1 });
+      },
+      removeOrderItem(index) {
+        this.newOrderItems.splice(index, 1);
+      },
+
+      //   openDeleteModal(id) {
+      //     this.orderId = id;
+      //     this.showDelete = true;
+      //   },
+
+      openInvoiceModal(order) {
+        this.invoice = order;
+        this.showInvoice = true;
+      },
+
+      closeModals() {
+        this.showDelete = false;
+        this.showInvoice = false;
+        this.showNewOrder = false;
+        this.orderId = "";
+        this.invoice = {
+          id: null,
+          user: {},
+          items: [],
+          products: [],
+          createdAt: "",
+        };
+      },
+
+      getProductName(productId) {
+        const product = this.invoice.products.find((p) => p.id === productId);
+        return product ? product.name : "Tidak ditemukan";
+      },
+
+      getProductPrice(productId) {
+        const product = this.invoice.products.find((p) => p.id === productId);
+        return product ? product.price : 0;
+      },
+
+      formatPrice(value) {
+        return "Rp " + value.toLocaleString("id-ID");
+      },
+
+      totalAmount() {
+        return this.invoice.items.reduce((total, item) => {
+          const price = this.getProductPrice(item.productId);
+          return total + price * item.quantity;
+        }, 0);
+      },
+    };
+  }
+</script>
