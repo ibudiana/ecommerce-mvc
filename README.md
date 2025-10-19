@@ -80,7 +80,7 @@ https://documenter.getpostman.com/view/37267696/2sB3QNp8Mh
 ## 📸 Screenshot (Opsional)
 
 ![Register Screen](./images/register.png)
-![Login Screen](./assets/login.png)
-![Products Screen](./assets/product.png)
-![Users Screen](./assets/users.png)
-![Orders Product Me Screen](./assets/order.png)
+![Login Screen](./images/login.png)
+![Products Screen](./images/product.png)
+![Users Screen](./images/users.png)
+![Orders Product Me Screen](./images/order.png)
